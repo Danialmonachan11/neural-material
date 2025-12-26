@@ -1,6 +1,6 @@
 # ControlDiff: Advanced Material-Conditioned Diffusion Model
 
-A state-of-the-art diffusion model framework with advanced fine-tuning and controllable generation capabilities for material-aware image synthesis.
+A comprehensive diffusion model framework implementing modern fine-tuning techniques (LoRA, DreamBooth) and controllable generation for material-aware image synthesis.
 
 ## Key Features
 
@@ -72,8 +72,8 @@ controldiff/
 
 ```bash
 # Clone repository
-git clone <repo-url>
-cd controldiff
+git clone https://github.com/Danialmonachan11/neural-material.git
+cd neural-material
 
 # Install dependencies
 pip install -e .
@@ -133,23 +133,25 @@ python scripts/finetune_dreambooth.py \
 - Experiment management with Hydra + WandB
 - Automated hyperparameter tuning
 
-## Performance Benchmarks
+## Evaluation Metrics
 
-| Method | FID ↓ | CLIP Score ↑ | Material Acc ↑ | Training Time |
-|--------|-------|--------------|----------------|---------------|
-| Base Model | 12.3 | 0.312 | - | 48h (8xA100) |
-| + LoRA | 11.8 | 0.318 | 0.87 | 4h (1xA100) |
-| + DreamBooth | 10.2 | 0.325 | 0.91 | 2h (1xA100) |
+The framework includes comprehensive evaluation tools:
 
-## Citation
+- **FID (Fréchet Inception Distance)**: Measures image quality and diversity
+- **CLIP Score**: Evaluates text-image alignment
+- **Inception Score**: Assesses generation quality
+- **Material Accuracy**: Custom metric for material classification
 
-```bibtex
-@software{controldiff2025,
-  title={ControlDiff: Material-Conditioned Diffusion with Advanced Fine-tuning},
-  year={2025},
-  author={Your Name}
-}
-```
+See `src/evaluation/metrics.py` for implementation details.
+
+## Acknowledgments
+
+This project implements techniques from several research papers:
+
+- **Denoising Diffusion Probabilistic Models** (Ho et al., 2020)
+- **High-Resolution Image Synthesis with Latent Diffusion Models** (Rombach et al., 2022)
+- **LoRA: Low-Rank Adaptation of Large Language Models** (Hu et al., 2021)
+- **DreamBooth: Fine Tuning Text-to-Image Diffusion Models** (Ruiz et al., 2022)
 
 ## License
 
