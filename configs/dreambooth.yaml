@@ -1,0 +1,34 @@
+# Configuration for DreamBooth personalization
+
+defaults:
+  - base_config
+
+dreambooth:
+  # Instance data
+  instance_images_path: 'data/dreambooth/instance'
+  instance_prompt: 'a photo of sks material'
+
+  # Class data (for prior preservation)
+  class_images_path: 'data/dreambooth/class'
+  class_prompt: 'a photo of material'
+  num_class_images: 200
+
+  # Prior preservation
+  use_prior_preservation: true
+  prior_loss_weight: 1.0
+
+training:
+  learning_rate: 2.0e-6
+  batch_size: 1
+  num_epochs: 100
+  gradient_accumulation_steps: 4
+
+  # Use LoRA for efficiency
+  use_lora: true
+  lora_rank: 4
+
+  pretrained_model_path: 'checkpoints/base_model.pt'
+
+logging:
+  output_dir: 'outputs/dreambooth'
+  wandb_project: 'controldiff-dreambooth'
