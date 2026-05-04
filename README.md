@@ -1,4 +1,4 @@
-# ControlDiff: Advanced Material-Conditioned Diffusion Model *https://danialmonachan11.github.io/demo-llm.html*
+# ControlDiff: Advanced Material-Conditioned Diffusion Model *https://danialmonachan11.github.io/demo-diffusion.html*
 
 A comprehensive diffusion model framework implementing modern fine-tuning techniques (LoRA, DreamBooth) and controllable generation for material-aware image synthesis.
 
