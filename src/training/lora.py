@@ -49,8 +49,11 @@ class LoRALayer(nn.Module):
 
         # Initialize A with kaiming uniform, B with zeros
         # This ensures at initialization, the LoRA path outputs zeros
-        self.lora_A = nn.Parameter(torch.zeros(in_features, rank))
-        self.lora_B = nn.Parameter(torch.zeros(rank, out_features))
+        # Same device and dtype as the base weight, so injecting into a model
+        # that is already on GPU (as DreamBooth does) works.
+        factory = dict(device=original_layer.weight.device, dtype=original_layer.weight.dtype)
+        self.lora_A = nn.Parameter(torch.zeros(in_features, rank, **factory))
+        self.lora_B = nn.Parameter(torch.zeros(rank, out_features, **factory))
 
         # Initialize A
         nn.init.kaiming_uniform_(self.lora_A, a=math.sqrt(5))
@@ -76,19 +79,22 @@ class LoRALayer(nn.Module):
 
         return result
 
+    def delta_weight(self) -> torch.Tensor:
+        """The LoRA update in nn.Linear weight layout, (out_features, in_features)."""
+        return (self.lora_A @ self.lora_B).T * self.scaling
+
+    @torch.no_grad()
     def merge(self):
         """Merge LoRA weights into the original layer for inference."""
         if not self.merged:
-            # W = W_0 + scaling * B @ A
-            delta_w = (self.lora_B @ self.lora_A.T) * self.scaling
-            self.original_layer.weight.data += delta_w.T
+            self.original_layer.weight += self.delta_weight()
             self.merged = True
 
+    @torch.no_grad()
     def unmerge(self):
         """Unmerge LoRA weights from the original layer."""
         if self.merged:
-            delta_w = (self.lora_B @ self.lora_A.T) * self.scaling
-            self.original_layer.weight.data -= delta_w.T
+            self.original_layer.weight -= self.delta_weight()
             self.merged = False
 
     def extra_repr(self) -> str:
@@ -118,6 +124,9 @@ def inject_lora_into_model(
     if target_modules is None:
         # Default: target query, key, value projections in attention
         target_modules = ['to_q', 'to_k', 'to_v', 'to_out.0']
+
+    # Freeze the whole pretrained model, so only the adapters created below train.
+    model.requires_grad_(False)
 
     def _inject_lora_recursive(module: nn.Module, name: str = ''):
         """Recursively inject LoRA into matching modules."""
@@ -237,6 +246,7 @@ class LoRALinear(nn.Module):
 
         # Original linear layer
         self.linear = nn.Linear(in_features, out_features, bias=bias)
+        self.linear.requires_grad_(False)
 
         # LoRA matrices
         if rank > 0:
@@ -252,7 +262,7 @@ class LoRALinear(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         result = self.linear(x)
 
-        if self.lora_A is not None and self.training:
+        if self.lora_A is not None:  # applies in eval mode too, or inference loses the fine-tune
             lora_result = self.dropout(x) @ self.lora_A @ self.lora_B * self.scaling
             result = result + lora_result
 
